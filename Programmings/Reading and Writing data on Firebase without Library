@@ -1,0 +1,88 @@
+#include <WiFi.h>
+#include <HTTPClient.h>
+
+const char* ssid = "NT_OFFICE";
+const char* password = "MajesticBLR@3214SH";
+const char* firebaseHost = "https://water-quality-fd458-default-rtdb.asia-southeast1.firebasedatabase.app/";
+const char* firebaseAuth = "AIzaSyA5jwgz-XIwALvBcFMxyK7KsvQ2kRiAM4o";
+String Data = "";
+
+    // JSON data to send
+    String jsonData = "";
+void setup() {
+  Serial.begin(115200);
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("Connected to Wi-Fi");
+  delay(1000);
+  Data = "Sensor/button";
+
+  // JSON data to send
+  jsonData = "{\"Temperature\":12354}";
+ 
+}
+
+void loop() {
+ firebase(Data, 2,"" );
+}
+int firebase(String Data, int request, String jsonData)
+{
+  // Create an HTTPClient object
+  HTTPClient http;
+
+  // Construct the Firebase URL
+  String url = "https://water-quality-fd458-default-rtdb.asia-southeast1.firebasedatabase.app/" + Data + ".json?auth=AIzaSyA5jwgz-XIwALvBcFMxyK7KsvQ2kRiAM4o"; //"https://" + String(firebaseHost) + "/Sensor.json?auth=" + firebaseAuth;
+
+  // Start the HTTP PUT request
+  http.begin(url);
+
+  if (request == 1)
+  {
+    http.addHeader("Content-Type", "application/json");
+
+
+    // Send the PUT request and get the response code
+    int httpResponseCode = http.PUT(jsonData);
+
+    if (httpResponseCode > 0) {
+      String response = http.getString();
+      Serial.println("Response code: " + String(httpResponseCode));
+      Serial.println("Response: " + response);
+    } else {
+      Serial.println("Error code: " + String(httpResponseCode));
+    }
+    http.end();
+  }
+  if (request == 2)
+  {
+    int httpResponseCode = http.GET();
+
+    if (httpResponseCode > 0) {
+      String payload = http.getString();
+
+      // Print the response for debugging
+      Serial.println("Response code: " + String(httpResponseCode));
+      Serial.println("Response payload: " + payload);
+
+      // Parse the payload to get the integer value
+      int intValue = payload.toInt();
+      return intValue;
+    } else {
+      Serial.println("Error code: " + String(httpResponseCode));
+    }
+
+    // End the HTTP request
+    http.end();
+
+  }
+
+
+  // End the HTTP request
+
+
+  // Delay to avoid sending requests too frequently
+  delay(10000);
+}
